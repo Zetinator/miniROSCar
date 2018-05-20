@@ -17,7 +17,7 @@ The standard notation package and node is enough to run the node...
 1. `roscore`
 2. `rosrun kontrollieren kontrol_trajectory_node`
 
-##How to use it
+## How to use it
 
 The node subscribes to three signals from different sensors, thanks to the wrapping facilities of ROS it's just a matter of asking to the correct topics. Wich in this case will be three:
 
