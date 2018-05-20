@@ -13,20 +13,13 @@
 
 using namespace std;
 
-//For geometry_msgs::Twist using:
+//geometry_msgs::Twist using:
 // 		dummy.linear.x
 // 		dummy.linear.y
 // 		dummy.angular.z
 
 
-
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-// Run in terminal the node: turtlesim turtle_teleop_key
-// Change mode: rostopic pub /turtle1/cmd_vel geometry_msgs/Twist '[0.0, 1.0, 0.0]' '[0.0, 0.0, 0.0]'
-
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
+// Some global variables
 sensor_msgs::Range robot_positionRange;
 sensor_msgs::Imu robot_positionImu;
 
@@ -57,11 +50,11 @@ void getCommand(const geometry_msgs::Twist& turtle_msg) {
 		command_msg.angular.z = 0;
 		command_msg.linear.x = turtle_msg.linear.x;
 
-	} 	
+	}
 	if (command_msg.angular.z == 2 || command_msg.angular.z == -2)
 	{
 		command_msg.linear.x = command_msg.linear.x;
-	} 	
+	}
 	command_msg.angular.z = turtle_msg.angular.z;	//Inverted God knows why...
 	command_msg.linear.y = turtle_msg.linear.y;
 }
@@ -123,7 +116,7 @@ int main(int argc, char **argv){
 	ros::Publisher pubKontrolliert = nh.advertise<geometry_msgs::Twist>("/kontrolliert", rate_hz);
 
 	ros::Subscriber cmmds = nh.subscribe("/turtle1/cmd_vel", 1, &getCommand);
-	ros::Subscriber ranger = nh.subscribe("/ultrasound", 1, &getRange); 
+	ros::Subscriber ranger = nh.subscribe("/ultrasound", 1, &getRange);
 	ros::Subscriber imus = nh.subscribe("/imu", 1, &getRobotPose);
 
 	//Twist variable to publish velocity
@@ -135,7 +128,7 @@ int main(int argc, char **argv){
 
 	while (ros::ok())
 	{
-		//ROS_INFO_STREAM use for debugging 
+		//ROS_INFO_STREAM use for debugging
 		ROS_INFO_STREAM("Robot Pose"
 				<<",X,"<<robot_position.angular.x
 				<<",Y,"<<robot_position.angular.y
@@ -144,12 +137,12 @@ int main(int argc, char **argv){
 				<<",ultrasonic range,"<<range);
 
 		// Manual?
-		if (command_msg.linear.y != 0.0) {	
+		if (command_msg.linear.y != 0.0) {
 			desired_velocity = followTarget();
-		} else { 
+		} else {
 			desired_velocity = manualControl();
 		}
-		//ROS_INFO_STREAM use for debugging 
+		//ROS_INFO_STREAM use for debugging
 		ROS_INFO_STREAM("Execute command: "
 				<<"X:"<<desired_velocity.linear.x
 				<<",Y:"<<desired_velocity.linear.y
@@ -159,7 +152,7 @@ int main(int argc, char **argv){
 
 		ros::spinOnce();
 		rate.sleep();
-		time+=(1/rate_hz); 
+		time+=(1/rate_hz);
 	}
 	return 0;
 }
