@@ -3,20 +3,15 @@
 #include <geometry_msgs/Twist.h>
 #include <stdlib.h>
 #include <iostream>
-#include <Eigen/Dense>
-#include <Eigen/QR>
-#include <Eigen/LU>
 #include <math.h>
 #include <stdio.h>
 #include <turtlesim/Pose.h>
-#include <Eigen/Geometry>
 #include <sensor_msgs/Range.h>
 #include <sensor_msgs/Imu.h>
 #include <std_msgs/String.h>
 #include <std_msgs/UInt16.h>
 
 using namespace std;
-using namespace Eigen;
 
 //For geometry_msgs::Twist using:
 // 		dummy.linear.x
@@ -27,9 +22,8 @@ using namespace Eigen;
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-// Correr en terminal: rosrun turtlesim turtle_teleop_key
-
-// Cambiar a modo seguidor: rostopic pub /turtle1/cmd_vel geometry_msgs/Twist '[0.0, 1.0, 0.0]' '[0.0, 0.0, 0.0]'
+// Run in terminal the node: turtlesim turtle_teleop_key
+// Change mode: rostopic pub /turtle1/cmd_vel geometry_msgs/Twist '[0.0, 1.0, 0.0]' '[0.0, 0.0, 0.0]'
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -39,9 +33,9 @@ sensor_msgs::Imu robot_positionImu;
 geometry_msgs::Twist robot_position;
 geometry_msgs::Twist command_msg;
 
-double rango;
+double range;
 double theta;
-double distanciaPrudente = 20;
+double goodDistance = 20;
 
 //rate_hz assignment
 double rate_hz = 30;
@@ -49,11 +43,11 @@ double rate_hz = 30;
 void getRobotPose(const sensor_msgs::Imu& imu_msg) {
 	robot_position.angular.x = imu_msg.orientation.x;	//roll
 	robot_position.angular.y = imu_msg.orientation.y;	//pitch
-    robot_position.angular.z = imu_msg.orientation.z; 	//yaw
+	robot_position.angular.z = imu_msg.orientation.z; 	//yaw
 }
 
 void getRange(const sensor_msgs::Range& ultrasound_msg) {
-	rango = ultrasound_msg.range;
+	range = ultrasound_msg.range;
 }
 
 void getCommand(const geometry_msgs::Twist& turtle_msg) {
@@ -68,22 +62,22 @@ void getCommand(const geometry_msgs::Twist& turtle_msg) {
 	{
 		command_msg.linear.x = command_msg.linear.x;
 	} 	
-		command_msg.angular.z = turtle_msg.angular.z;	//Inverted God knows why...
-		command_msg.linear.y = turtle_msg.linear.y;
+	command_msg.angular.z = turtle_msg.angular.z;	//Inverted God knows why...
+	command_msg.linear.y = turtle_msg.linear.y;
 }
 
 
 
 geometry_msgs::Twist followTarget(){
 	geometry_msgs::Twist velocity;
-	if (abs(rango - distanciaPrudente) <= 5)
+	if (abs(range - goodDistance) <= 5)
 	{
 		velocity.linear.x = 90;
 		velocity.linear.y = 0;
 		velocity.angular.z = 90;
-		
+
 	}else{
-		if (rango >= distanciaPrudente)
+		if (range >= goodDistance)
 		{
 			velocity.linear.x = 180;
 			velocity.linear.y = 0;
@@ -112,7 +106,7 @@ geometry_msgs::Twist manualControl(){
 		{
 			velocity_new.angular.z = 90;
 		}else{
-				velocity_new.angular.z = 180;
+			velocity_new.angular.z = 180;
 		}
 	}
 
@@ -125,31 +119,31 @@ int main(int argc, char **argv){
 	ros::NodeHandle nh;
 	ROS_INFO_STREAM("kontrollieren engaged");
 	ROS_INFO_STREAM(ros::this_node::getName());
-	
+
 	ros::Publisher pubKontrolliert = nh.advertise<geometry_msgs::Twist>("/kontrolliert", rate_hz);
 
 	ros::Subscriber cmmds = nh.subscribe("/turtle1/cmd_vel", 1, &getCommand);
 	ros::Subscriber ranger = nh.subscribe("/ultrasound", 1, &getRange); 
 	ros::Subscriber imus = nh.subscribe("/imu", 1, &getRobotPose);
 
-    //Twist variable to publish velocity
+	//Twist variable to publish velocity
 	geometry_msgs::Twist desired_velocity;
 
-	double tiempo = 0;
-    //define the rate
+	double time = 0;
+	//define the rate
 	ros::Rate rate(rate_hz);
 
 	while (ros::ok())
 	{
-        //ROS_INFO_STREAM use for debugging 
+		//ROS_INFO_STREAM use for debugging 
 		ROS_INFO_STREAM("Robot Pose"
-			<<",X,"<<robot_position.angular.x
-			<<",Y,"<<robot_position.angular.y
-			<<",W,"<<robot_position.angular.z);
+				<<",X,"<<robot_position.angular.x
+				<<",Y,"<<robot_position.angular.y
+				<<",W,"<<robot_position.angular.z);
 		ROS_INFO_STREAM("Range:"
-			<<",Rango Ultrasonido,"<<rango);
+				<<",ultrasonic range,"<<range);
 
-        // Manual?
+		// Manual?
 		if (command_msg.linear.y != 0.0) {	
 			desired_velocity = followTarget();
 		} else { 
@@ -157,15 +151,15 @@ int main(int argc, char **argv){
 		}
 		//ROS_INFO_STREAM use for debugging 
 		ROS_INFO_STREAM("Execute command: "
-			<<"X:"<<desired_velocity.linear.x
-			<<",Y:"<<desired_velocity.linear.y
-			<<",W:"<<desired_velocity.angular.z);
+				<<"X:"<<desired_velocity.linear.x
+				<<",Y:"<<desired_velocity.linear.y
+				<<",W:"<<desired_velocity.angular.z);
 
 		pubKontrolliert.publish(desired_velocity);
-		
+
 		ros::spinOnce();
 		rate.sleep();
-		tiempo+=(1/rate_hz); 
+		time+=(1/rate_hz); 
 	}
 	return 0;
 }
