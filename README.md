@@ -44,7 +44,7 @@ For geometry_msgs::Twist using:
 The node frome turtlesim needed is:
 
 ```
-rossun turtlesim turtle_teleop_key
+rosrun turtlesim turtle_teleop_key
 ```
 To change the "mode of operation" of the car (from manual control to following and object) is:
 
